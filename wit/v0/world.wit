@@ -1,0 +1,64 @@
+package zeroclaw:plugin@0.1.0;
+
+@unstable(feature = plugins-wit-v0)
+interface types {
+  @unstable(feature = plugins-wit-v0)
+  type json-string = string;
+}
+
+@unstable(feature = plugins-wit-v0)
+interface logging {
+  @unstable(feature = plugins-wit-v0)
+  use types.{json-string};
+  @unstable(feature = plugins-wit-v0)
+  enum log-level { trace, debug, info, warn, error }
+  @unstable(feature = plugins-wit-v0)
+  enum plugin-action {
+    start, complete, fail, cancel, skip, timeout, retry, inbound, outbound,
+    send, receive, connect, disconnect, reconnect, spawn, kill, tick, trigger,
+    schedule, approve, reject, defer, read, write, delete, list-action, query,
+    invoke, dispatch, resolve, register, unregister, load, save, migrate,
+    validate, note
+  }
+  @unstable(feature = plugins-wit-v0)
+  enum plugin-outcome { success, failure }
+  @unstable(feature = plugins-wit-v0)
+  record plugin-event {
+    function-name: string,
+    action: plugin-action,
+    outcome: option<plugin-outcome>,
+    duration-ms: option<u64>,
+    attrs: option<json-string>,
+    message: string,
+  }
+  log-record: func(level: log-level, event: plugin-event);
+}
+
+@unstable(feature = plugins-wit-v0)
+interface plugin-info {
+  plugin-name: func() -> string;
+  plugin-version: func() -> string;
+}
+
+@unstable(feature = plugins-wit-v0)
+interface tool {
+  @unstable(feature = plugins-wit-v0)
+  use types.{json-string};
+  @unstable(feature = plugins-wit-v0)
+  record tool-result {
+    success: bool,
+    output: string,
+    error: option<string>,
+  }
+  name: func() -> string;
+  description: func() -> string;
+  parameters-schema: func() -> json-string;
+  execute: func(args: json-string) -> result<tool-result, string>;
+}
+
+@unstable(feature = plugins-wit-v0)
+world tool-plugin {
+  import logging;
+  export plugin-info;
+  export tool;
+}
