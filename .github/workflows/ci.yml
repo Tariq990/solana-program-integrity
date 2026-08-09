@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - name: Install Rust components and WASI Preview 2 target
+        run: |
+          rustup component add rustfmt clippy
+          rustup target add wasm32-wasip2
+      - name: Resolve and pin dependency lockfile
+        run: |
+          cargo generate-lockfile
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Cargo.lock
+          if ! git diff --cached --quiet; then
+            git commit -m "build: pin Rust dependency graph"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Host tests
+        run: cargo test --locked
+      - name: Host clippy
+        run: cargo clippy --locked --all-targets -- -D warnings
+      - name: WASI clippy
+        run: cargo clippy --locked --target wasm32-wasip2 -- -D warnings
+      - name: WASI release component
+        run: cargo build --locked --target wasm32-wasip2 --release
+      - name: Component fingerprint
+        run: |
+          test -s target/wasm32-wasip2/release/solana_program_integrity.wasm
+          sha256sum target/wasm32-wasip2/release/solana_program_integrity.wasm
