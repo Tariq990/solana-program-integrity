@@ -1,0 +1,7 @@
+name = "solana-program-integrity"
+version = "0.1.0"
+description = "Fingerprint deployed Solana program bytes and fail closed on unexpected code drift"
+author = "Tariq990"
+wasm_path = "solana_program_integrity.wasm"
+capabilities = ["tool"]
+permissions = ["http_client", "config_read"]
